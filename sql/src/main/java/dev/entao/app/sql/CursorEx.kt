@@ -5,6 +5,17 @@ package dev.entao.app.sql
 import android.database.Cursor
 
 
+inline fun <reified T : Any> Cursor.toList(block: (Cursor) -> T): ArrayList<T> {
+    val ls = ArrayList<T>(this.count + 8)
+    this.use {
+        while (it.moveToNext()) {
+            ls += block(it)
+        }
+    }
+    return ls
+}
+
+
 inline fun Cursor.eachRow(block: (Cursor) -> Unit) {
     this.use {
         while (it.moveToNext()) {

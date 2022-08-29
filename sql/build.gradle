@@ -4,7 +4,7 @@ plugins {
 }
 ext {
     nameGroup = "dev.entao.app"
-    nameVersion = "0.6.0"
+    nameVersion = "0.6.1"
     nameAF = "sql"
     nameGithub = "AppSQL"
     libDesc = 'Android Library, sql functions.'
