@@ -4,8 +4,19 @@ package dev.entao.app.sql
 
 import android.database.Cursor
 
+interface CursorToModel {
+    fun fromCursor(cursor: Cursor)
+}
 
-inline fun <reified T : Any> Cursor.toList(block: (Cursor) -> T): ArrayList<T> {
+fun <R : Any> Cursor.firstRow(block: (Cursor) -> R): R? {
+    return this.use {
+        if (it.moveToNext()) {
+            block(it)
+        } else null
+    }
+}
+
+fun <T : Any> Cursor.toList(block: (Cursor) -> T): ArrayList<T> {
     val ls = ArrayList<T>(this.count + 8)
     this.use {
         while (it.moveToNext()) {
@@ -24,28 +35,25 @@ inline fun Cursor.eachRow(block: (Cursor) -> Unit) {
     }
 }
 
-inline fun <R> Cursor.firstRow(block: (Cursor) -> R): R? {
-    return this.use {
-        if (it.moveToNext()) {
-            block(it)
-        } else null
+
+val Cursor.resultExists: Boolean get() = this.use { it.moveToNext() }
+
+
+val Cursor.resultInt: Int get() = firstRow { it.getInt(0) } ?: 0
+val Cursor.resultLong: Long get() = firstRow { it.getLong(0) } ?: 0L
+val Cursor.resultString: String? get() = firstRow { it.getString(0) }
+
+val Cursor.currentRowData: RowData get() = RowData().also { it.fromCursor(this) }
+
+fun Cursor.firstRowData(): RowData? {
+    return firstRow { it.currentRowData }
+}
+
+fun Cursor.toRowDataList(): List<RowData> {
+    return this.toList {
+        it.currentRowData
     }
 }
 
 
-val Cursor.existRowClose: Boolean get() = this.use { it.moveToNext() }
 
-
-val Cursor.firstIntClose: Int get() = firstRow { it.getInt(0) } ?: 0
-val Cursor.firstLongClose: Long get() = firstRow { it.getLong(0) } ?: 0L
-val Cursor.firstStringClose: String? get() = firstRow { it.getString(0) }
-val Cursor.firstDataClose: RowData? get() = firstRow { it.currentData }
-
-val Cursor.currentData: RowData get() = RowData.rowOf(this)
-
-val Cursor.listDataClose: List<RowData>
-    get() {
-        val ls = ArrayList<RowData>()
-        eachRow { ls += it.currentData }
-        return ls
-    }

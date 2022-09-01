@@ -14,32 +14,49 @@ import kotlin.reflect.full.hasAnnotation
 import kotlin.reflect.full.memberProperties
 
 
-fun <T : Any> Cursor.firstModel(block: () -> T): T? {
-    return this.firstRow {
-        val m = block()
+inline fun <reified T : Any> Cursor.currentModel(): T {
+    val m: T = T::class.createInstance()
+    if (m is CursorToModel) {
+        m.fromCursor(this)
+    } else {
         fillModel(m)
-        m
     }
+    return m
 }
 
 inline fun <reified T : Any> Cursor.firstModel(): T? {
-    return firstModel { T::class.createInstance() }
-}
-
-inline fun <reified T : Any> Cursor.listModels(): List<T> {
-    return listModels { T::class.createInstance() }
-}
-
-
-inline fun <reified T : Any> Cursor.listModels(block: () -> T): List<T> {
-    val ps = T::class.propsOfModel
-    val ls = ArrayList<T>(256)
-    this.eachRow {
-        val m = block()
-        fillModel(m, ps)
-        ls += m
+    return firstRow {
+        it.currentModel()
     }
-    return ls
+}
+
+inline fun <reified T : Any> Cursor.toModelList(): ArrayList<T> {
+    return toList {
+        it.currentModel()
+    }
+}
+
+
+fun <T : Any> Cursor.currentModel(block: () -> T): T {
+    val m: T = block()
+    if (m is CursorToModel) {
+        m.fromCursor(this)
+    } else {
+        fillModel(m)
+    }
+    return m
+}
+
+fun <T : Any> Cursor.firstModel(block: () -> T): T? {
+    return firstRow {
+        it.currentModel(block)
+    }
+}
+
+fun <T : Any> Cursor.toModelList(block: () -> T): ArrayList<T> {
+    return toList {
+        it.currentModel<T>(block)
+    }
 }
 
 

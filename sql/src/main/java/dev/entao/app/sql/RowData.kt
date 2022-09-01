@@ -5,7 +5,23 @@ package dev.entao.app.sql
 import android.database.Cursor
 
 
-class RowData(val map: MutableMap<String, Any?> = LinkedHashMap(16)) {
+class RowData(val map: MutableMap<String, Any?> = LinkedHashMap(16)) : CursorToModel {
+
+    override fun fromCursor(cursor: Cursor) {
+        val colCount = cursor.columnCount
+        for (i in 0 until colCount) {
+            val key = cursor.getColumnName(i)
+            val v: Any? = when (cursor.getType(i)) {
+                Cursor.FIELD_TYPE_NULL -> null
+                Cursor.FIELD_TYPE_INTEGER -> cursor.getLong(i)
+                Cursor.FIELD_TYPE_FLOAT -> cursor.getDouble(i)
+                Cursor.FIELD_TYPE_STRING -> cursor.getString(i)
+                Cursor.FIELD_TYPE_BLOB -> cursor.getBlob(i)
+                else -> null
+            }
+            map[key] = v
+        }
+    }
 
     fun isNull(key: String): Boolean {
         return map[key] == null
@@ -52,23 +68,5 @@ class RowData(val map: MutableMap<String, Any?> = LinkedHashMap(16)) {
     }
 
 
-    companion object {
-        fun rowOf(c: Cursor): RowData {
-            val map = LinkedHashMap<String, Any?>()
-            val colCount = c.columnCount
-            for (i in 0 until colCount) {
-                val key = c.getColumnName(i)
-                val v: Any? = when (c.getType(i)) {
-                    Cursor.FIELD_TYPE_NULL -> null
-                    Cursor.FIELD_TYPE_INTEGER -> c.getLong(i)
-                    Cursor.FIELD_TYPE_FLOAT -> c.getDouble(i)
-                    Cursor.FIELD_TYPE_STRING -> c.getString(i)
-                    Cursor.FIELD_TYPE_BLOB -> c.getBlob(i)
-                    else -> null
-                }
-                map[key] = v
-            }
-            return RowData(map)
-        }
-    }
+
 }

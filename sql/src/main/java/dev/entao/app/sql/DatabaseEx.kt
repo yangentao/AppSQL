@@ -14,7 +14,7 @@ import dev.entao.app.basic.plusAssign
 fun SQLiteDatabase.dumpTable(tableName: String) {
     val c = this.query("SELECT * FROM $tableName") ?: return
     val sb = StringBuilder(200)
-    c.listDataClose.forEach {
+    c.toRowDataList().forEach {
         sb.setLength(0)
         it.map.forEach { e ->
             sb.append(e.value?.toString() ?: "null").append(", ")
@@ -26,18 +26,17 @@ fun SQLiteDatabase.dumpTable(tableName: String) {
 fun SQLiteDatabase.tables(): HashSet<String> {
     val all = HashSet<String>()
     val c = this.query("SELECT name FROM sqlite_master WHERE type='table'") ?: return all
-    c.listDataClose.forEach {
+    c.toRowDataList().forEach {
         all += it.str("name") ?: ""
     }
     return all
 }
 
 
-
 fun SQLiteDatabase.indexs(): ArrayList<Pair<String, String>> {
     val all = ArrayList<Pair<String, String>>()
     val c = this.query("SELECT name, tbl_name FROM sqlite_master WHERE type='index'") ?: return all
-    c.listDataClose.forEach {
+    c.toRowDataList().forEach {
         val a = it.str("name")!!
         val b = it.str("tbl_name")!!
         all += a to b
@@ -48,7 +47,7 @@ fun SQLiteDatabase.indexs(): ArrayList<Pair<String, String>> {
 fun SQLiteDatabase.indexInfo(indexName: String): HashSet<String> {
     val all = HashSet<String>()
     val c = this.query("PRAGMA index_info('$indexName')") ?: return all
-    c.listDataClose.forEach {
+    c.toRowDataList().forEach {
         all += it.str("name")!!
     }
     return all
@@ -58,7 +57,7 @@ fun SQLiteDatabase.tableInfo(tableName: String): ArrayList<TableInfoItem> {
     val all = ArrayList<TableInfoItem>()
     val c = this.query("PRAGMA table_info('$tableName')", emptyList())
         ?: return all
-    val ls = c.listDataClose
+    val ls = c.toRowDataList()
     ls.forEach {
         val item = TableInfoItem()
         item.cid = it.int("cid") ?: 0
@@ -76,7 +75,7 @@ fun SQLiteDatabase.tableInfo(tableName: String): ArrayList<TableInfoItem> {
 fun SQLiteDatabase.indexsOf(table: String): HashSet<String> {
     val all = HashSet<String>()
     val c = this.query("SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='$table'") ?: return all
-    c.listDataClose.forEach {
+    c.toRowDataList().forEach {
         val s = it.str("name")
         if (s != null) {
             all.add(s)
@@ -112,12 +111,12 @@ fun SQLiteDatabase.dropTable(table: String) {
 
 fun SQLiteDatabase.countTable(table: String): Int {
     val c = this.query("SELECT count(*) FROM '$table'") ?: return 0
-    return c.firstIntClose
+    return c.resultInt
 }
 
 fun SQLiteDatabase.existTable(tableName: String): Boolean {
     val sql = "SELECT * FROM sqlite_master WHERE type = 'table' AND name = '$tableName'"
-    return this.query(sql)?.existRowClose ?: false
+    return this.query(sql)?.resultExists ?: false
 }
 
 fun SQLiteDatabase.replaceX(table: String, vararg ps: Pair<String, String>) {
@@ -157,7 +156,6 @@ fun SQLiteDatabase.filter(table: String, w: Where?, orderBy: String?, limit: Int
     }
     return this.query(sb.toString(), w?.args)
 }
-
 
 
 //"cid": 0,

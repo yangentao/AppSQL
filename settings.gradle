@@ -16,7 +16,7 @@ dependencyResolutionManagement {
 		mavenCentral()
 	}
 }
-rootProject.name = "AppLog"
+rootProject.name = "AppSQL"
 
 
 include ':app'

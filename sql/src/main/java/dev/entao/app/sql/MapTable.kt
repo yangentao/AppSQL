@@ -72,15 +72,15 @@ class MapTable(val db: SQLiteDatabase, val table: String) {
     }
 
     fun findKey(value: String): String? {
-        return db.query("SELECT $KEY from $table where $VAL = ? limit 1", listOf(value))?.firstStringClose
+        return db.query("SELECT $KEY from $table where $VAL = ? limit 1", listOf(value))?.resultString
     }
 
     fun has(key: String): Boolean {
-        return db.query("select $VAL from $table where $KEY=? limit 1", listOf(key))?.existRowClose ?: false
+        return db.query("select $VAL from $table where $KEY=? limit 1", listOf(key))?.resultExists ?: false
     }
 
     operator fun get(key: String): String? {
-        return db.query("select $VAL from $table where $KEY=? limit 1", listOf(key))?.firstStringClose
+        return db.query("select $VAL from $table where $KEY=? limit 1", listOf(key))?.resultString
     }
 
     operator fun set(key: String, value: String?) {
