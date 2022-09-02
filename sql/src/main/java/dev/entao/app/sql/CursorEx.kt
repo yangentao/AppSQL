@@ -27,7 +27,7 @@ fun <T : Any> Cursor.toList(block: (Cursor) -> T): ArrayList<T> {
 }
 
 
-inline fun Cursor.eachRow(block: (Cursor) -> Unit) {
+fun Cursor.eachRow(block: (Cursor) -> Unit) {
     this.use {
         while (it.moveToNext()) {
             block(it)
